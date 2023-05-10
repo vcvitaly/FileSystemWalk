@@ -14,6 +14,7 @@ func main() {
 	logFile := flag.String("log", "", "Log deletes to this file")
 	// Action options
 	list := flag.Bool("list", false, "List files only")
+	archive := flag.String("archive", "", "Archive directory")
 	del := flag.Bool("del", false, "Delete files")
 	// Filter options
 	ext := flag.String("ext", "", "File extension to filter out")
@@ -39,11 +40,12 @@ func main() {
 	}
 
 	c := config{
-		ext:  *ext,
-		size: *size,
-		list: *list,
-		del:  *del,
-		wLog: f,
+		ext:     *ext,
+		size:    *size,
+		list:    *list,
+		del:     *del,
+		wLog:    f,
+		archive: *archive,
 	}
 
 	if err := run(*root, os.Stdout, c); err != nil {
@@ -69,6 +71,13 @@ func run(root string, out io.Writer, cfg config) error {
 				return listFile(path, out)
 			}
 
+			// Archive files and continue if successful
+			if cfg.archive != "" {
+				if err := archiveFile(cfg.archive, root, path); err != nil {
+					return err
+				}
+			}
+
 			// Delete files
 			if cfg.del {
 				return delFile(path, delLogger)
@@ -90,4 +99,6 @@ type config struct {
 	del bool
 	// log destination writer
 	wLog io.Writer
+	// archive directory
+	archive string
 }
